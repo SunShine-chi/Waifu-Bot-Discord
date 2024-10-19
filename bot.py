@@ -10,7 +10,7 @@ import json
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
 if TOKEN is None:
-    raise ValueError("Token không được tìm thấy! Hãy chắc chắn rằng bạn đã đặt biến DISCORD_TOKEN trong file .env.")
+    raise ValueError("Token không được tìm thấy! (.env).")
 
 intents = discord.Intents.default()
 intents.messages = True

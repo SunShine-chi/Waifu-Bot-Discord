@@ -100,10 +100,10 @@ async def on_message(message):
             # Nếu là người nhắn liên tiếp, chỉ đọc nội dung
             tts = gTTS(text=message.content, lang='vi')
         else:
-            # Nếu là người mới hoặc chưa phát gì, đọc cả tên
+            # Nếu là người vừa nhắn hoặc người khác nhắn cắt ngang, đọc lại cả tên giới thiệu như bình thường
             tts = gTTS(text=tts_text, lang='vi')
-            is_playing = True  # Đánh dấu là đang phát
-            last_user = username  # Cập nhật người gửi
+            is_playing = True  # Đánh dấu là đang phát giọng nói đọc tin nhắn
+            last_user = username  # Cập nhật lại người gửi tin nhắn
 
         # Tạo và phát file âm thanh
         with tempfile.NamedTemporaryFile(delete=True) as temp_file:

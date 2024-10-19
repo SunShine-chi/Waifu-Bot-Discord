@@ -24,7 +24,7 @@ current_text_channels = {}
 
 @client.event
 async def on_ready():
-    print("The bot is now ready for use!")
+    print("Vợ bạn đã sẵn sàng!")
 
 @client.command(name='hello')
 async def Hello_command(ctx):

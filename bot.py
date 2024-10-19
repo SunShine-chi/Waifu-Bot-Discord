@@ -75,7 +75,13 @@ async def on_message(message):
         return
 
     # Kiểm tra xem tin nhắn có phải là lệnh không
-    if any(message.content.startswith(prefix) for prefix in COMMAND_PREFIXES):
+    # if any(message.content.startswith(prefix) for prefix in COMMAND_PREFIXES):
+    #     await client.process_commands(message)
+    #     return  # Nếu là lệnh, không cần đọc tin nhắn
+
+     # Kiểm tra xem tin nhắn có phải là lệnh không (ký tự đầu tiên hoặc ký tự thứ hai)
+    if (len(message.content) > 1 and 
+        (message.content[0] in COMMAND_PREFIXES or message.content[1] in COMMAND_PREFIXES)):
         await client.process_commands(message)
         return  # Nếu là lệnh, không cần đọc tin nhắn
     
@@ -89,7 +95,7 @@ async def on_message(message):
             message.channel == current_text_channels[message.guild.id]):
         
         username = message.author.display_name
-        tts = gTTS(text=f"{username} muốn trình bày: {message.content}", lang='vi')
+        tts = gTTS(text=f"{username} nói: {message.content}", lang='vi')
         temp_file = tempfile.NamedTemporaryFile(delete=True)
         tts.save(f"{temp_file.name}.mp3")
 

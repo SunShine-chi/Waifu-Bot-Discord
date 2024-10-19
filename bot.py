@@ -1,11 +1,10 @@
 import discord
 from discord.ext import commands
-import nacl  
 from gtts import gTTS
 import os
 from dotenv import load_dotenv
 import tempfile
-import json
+import asyncio
 
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
@@ -18,9 +17,12 @@ intents.message_content = True
 
 client = commands.Bot(command_prefix='!', intents=intents, case_insensitive=True)
 
-# Dictionary để lưu trạng thái join của bot theo từng server
 current_voice_channels = {}
 current_text_channels = {}
+
+# Biến để theo dõi người gửi và trạng thái phát
+last_user = None
+is_playing = False
 
 @client.event
 async def on_ready():
@@ -28,8 +30,8 @@ async def on_ready():
 
 @client.command(name='hello')
 async def Hello_command(ctx):
-    if ctx.guild.emojis: #set emoji cho vui
-        first_emoji = ctx.guild.emojis[0]  #Lấy emoji đầu tiên của tùy server
+    if ctx.guild.emojis:
+        first_emoji = ctx.guild.emojis[0]
         await ctx.send(f"Hello, I'm Nắng's wife! {first_emoji}")
     else:
         await ctx.send("Hello, I'm Nắng's wife!")
@@ -40,15 +42,18 @@ async def Goodbye_command(ctx):
 
 @client.command(name='join')
 async def Join_command(ctx):
-    global current_voice_channels, current_text_channels
     if ctx.author.voice:
         channel = ctx.author.voice.channel
-
-        if ctx.guild.id not in current_voice_channels:  # Nếu bot chưa ở phòng nào trong server này
-            current_voice_channels[ctx.guild.id] = channel
-            current_text_channels[ctx.guild.id] = ctx.channel
-            await channel.connect()
-            await ctx.send(f"{ctx.author.mention} Em nè, em nè!")
+        if ctx.guild.id not in current_voice_channels:
+            try:
+                current_voice_channels[ctx.guild.id] = channel
+                current_text_channels[ctx.guild.id] = ctx.channel
+                await channel.connect()
+                await ctx.send(f"{ctx.author.mention} Em nè, em nè!")
+            except discord.ClientException:
+                await ctx.send("Bot đã ở trong một voice channel khác!")
+            except Exception as e:
+                await ctx.send(f"Đã xảy ra lỗi: {e}")
         else:
             await ctx.send(f"{ctx.author.mention} Xin lỗi anh nhiều, em ở nơi khác rồi ạ! Em đang ở [**{current_voice_channels[ctx.guild.id].name}**]({current_voice_channels[ctx.guild.id].jump_url}) nè!.")
     else:
@@ -63,29 +68,22 @@ async def Leave_command(ctx):
         await ctx.send("Giờ mình phải chia xa ư?")
     else:
         await ctx.send("Em đang không ở cùng ai khác đâu")
+COMMAND_PREFIXES = ['!', '?', '.', '/']  # Đặt danh sách tiền tố ở đây
 
-
-COMMAND_PREFIXES = ['!', '?', '.', '/']
-
+def is_command(message):
+    return len(message) > 1 and any(message.startswith(prefix) for prefix in COMMAND_PREFIXES)
 @client.event
 async def on_message(message):
-    global current_voice_channels, current_text_channels
+    global current_voice_channels, current_text_channels, last_user, is_playing
 
     if message.author == client.user:
         return
 
     # Kiểm tra xem tin nhắn có phải là lệnh không
-    # if any(message.content.startswith(prefix) for prefix in COMMAND_PREFIXES):
-    #     await client.process_commands(message)
-    #     return  # Nếu là lệnh, không cần đọc tin nhắn
-
-     # Kiểm tra xem tin nhắn có phải là lệnh không (ký tự đầu tiên hoặc ký tự thứ hai)
-    if (len(message.content) > 1 and 
-        (message.content[0] in COMMAND_PREFIXES or message.content[1] in COMMAND_PREFIXES)):
+    if is_command(message.content):
         await client.process_commands(message)
-        return  # Nếu là lệnh, không cần đọc tin nhắn
-    
-    #For riêng Kenz
+        return   
+
     if message.content.lower() == "anh ken là kiểu người gì?":
         await message.channel.send("Anh Ken là đồ tồi, đồi tồi tệ, tồi tệ nhất trên đời")
 
@@ -95,24 +93,41 @@ async def on_message(message):
             message.channel == current_text_channels[message.guild.id]):
         
         username = message.author.display_name
-        tts = gTTS(text=f"{username} nói: {message.content}", lang='vi')
-        temp_file = tempfile.NamedTemporaryFile(delete=True)
-        tts.save(f"{temp_file.name}.mp3")
-
-        voice_client = discord.utils.get(client.voice_clients, guild=message.guild)
-        if voice_client and voice_client.is_connected():
-            voice_client.play(discord.FFmpegPCMAudio(f"{temp_file.name}.mp3", executable="E:/ffmpeg/bin/ffmpeg.exe"), after=lambda e: print('Done playing'))
+        tts_text = f"{username} nói: {message.content}"
+        
+        # Kiểm tra xem có phải người này là người đang nhắn trước đó không
+        if last_user == username and is_playing:
+            # Nếu là người nhắn liên tiếp, chỉ đọc nội dung
+            tts = gTTS(text=message.content, lang='vi')
         else:
-            await message.channel.send(f"{message.author.mention} Bot không đang ở trong voice channel.")
+            # Nếu là người mới hoặc chưa phát gì, đọc cả tên
+            tts = gTTS(text=tts_text, lang='vi')
+            is_playing = True  # Đánh dấu là đang phát
+            last_user = username  # Cập nhật người gửi
+
+        # Tạo và phát file âm thanh
+        with tempfile.NamedTemporaryFile(delete=True) as temp_file:
+            tts.save(f"{temp_file.name}.mp3")
+            voice_client = discord.utils.get(client.voice_clients, guild=message.guild)
+            if voice_client and voice_client.is_connected():
+                voice_client.play(discord.FFmpegPCMAudio(f"{temp_file.name}.mp3", executable="E:/ffmpeg/bin/ffmpeg.exe"), after=lambda e: print('Done playing'))
+                
+                # Đợi cho đến khi âm thanh phát xong
+                while voice_client.is_playing():
+                    await asyncio.sleep(1)
+            else:
+                await message.channel.send(f"{message.author.mention} Bot không đang ở trong voice channel.")
 
     await client.process_commands(message)
 
 @client.event
 async def on_voice_state_update(member, before, after):
-    global current_voice_channels
+    global current_voice_channels, last_user, is_playing
     if member.bot and before.channel is not None:
         if member.guild.id in current_voice_channels:
             del current_voice_channels[member.guild.id]
             del current_text_channels[member.guild.id]
+            last_user = None  # Đặt lại người gửi
+            is_playing = False  # Đặt lại trạng thái phát
 
 client.run(TOKEN)

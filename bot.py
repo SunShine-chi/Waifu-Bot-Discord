@@ -6,7 +6,11 @@ from dotenv import load_dotenv
 import tempfile
 import asyncio
 
+
+
 load_dotenv()
+
+#Gọi token từ env nè:)
 TOKEN = os.getenv('DISCORD_TOKEN')
 if TOKEN is None:
     raise ValueError("Token không được tìm thấy! (.env).")
@@ -20,7 +24,7 @@ client = commands.Bot(command_prefix='!', intents=intents, case_insensitive=True
 current_voice_channels = {}
 current_text_channels = {}
 
-# Biến để theo dõi người gửi và trạng thái phát
+# Biến để theo dõi người gửi và trạng thái phát giọng nói
 last_user = None
 is_playing = False
 
@@ -28,6 +32,7 @@ is_playing = False
 async def on_ready():
     print("Vợ bạn đã sẵn sàng!")
 
+#Just say hello
 @client.command(name='hello')
 async def Hello_command(ctx):
     if ctx.guild.emojis:
@@ -36,10 +41,13 @@ async def Hello_command(ctx):
     else:
         await ctx.send("Hello, I'm Nắng's wife!")
 
+#Just say goodbye
 @client.command(name='goodbye')
 async def Goodbye_command(ctx):
     await ctx.send("Bye bye, My Darling!")
 
+
+#Join voice room
 @client.command(name='join')
 async def Join_command(ctx):
     if ctx.author.voice:
@@ -59,6 +67,8 @@ async def Join_command(ctx):
     else:
         await ctx.send(f"{ctx.author.mention} Anh giờ đang ở đâu, em hiện không thấy anh~~~")
 
+
+#Leave voice room
 @client.command(name='leave')
 async def Leave_command(ctx):
     if ctx.guild.id in current_voice_channels:
@@ -70,6 +80,8 @@ async def Leave_command(ctx):
         await ctx.send("Em đang không ở cùng ai khác đâu")
 COMMAND_PREFIXES = ['!', '?', '.', '/']  # Đặt danh sách tiền tố ở đây
 
+
+#Lọc các kí tự tiền tố dùng để gọi bot
 def is_command(message):
     return len(message) > 1 and any(message.startswith(prefix) for prefix in COMMAND_PREFIXES)
 @client.event
@@ -120,14 +132,47 @@ async def on_message(message):
 
     await client.process_commands(message)
 
+
+
+
+                                            #------Version cũ khi đặt lại trạng thái của bot khi bot rời khởi phòng voice---------#
+                                            
+# @client.event
+# async def on_voice_state_update(member, before, after):
+#     global current_voice_channels, last_user, is_playing
+#     if member.bot and before.channel is not None:
+#         if member.guild.id in current_voice_channels:
+#             del current_voice_channels[member.guild.id]
+#             del current_text_channels[member.guild.id]
+#             last_user = None  # Đặt lại người gửi (về "không có")
+#             is_playing = False  # Đặt lại trạng thái phát (về "stop completely" <dừng lại hoàn toàn> cho tới khi được gọi vào tiếp 1 phòng voice nào đó)
+
+
+
+
+
+
+                                                ##### #------Version mới khi đặt lại trạng thái của bot khi bot rời khởi phòng voice---------# #####
+                                            
+                                    ###---------------Update thêm khả năng TỰ ĐỘNG OUT PHÒNG VOICE nếu như không còn ai trong phòng voice đó------------------###
+                                            # Có thể hiểu là: người dùng out hết khỏi phòng voice, member's quantity = 1 (nghĩa là chỉ còn 1 mình bot) #
+                                                                        # ---> Sẽ tự động out khỏi phòng #
 @client.event
 async def on_voice_state_update(member, before, after):
     global current_voice_channels, last_user, is_playing
-    if member.bot and before.channel is not None:
-        if member.guild.id in current_voice_channels:
+    if member.guild.id in current_voice_channels and member.guild.voice_client:
+        voice_client = member.guild.voice_client
+
+        # Kiểm tra xem có còn ai trong kênh không
+        if len(voice_client.channel.members) == 1:  # Chỉ còn bot
+            await voice_client.disconnect()
             del current_voice_channels[member.guild.id]
             del current_text_channels[member.guild.id]
-            last_user = None  # Đặt lại người gửi (về "không có")
-            is_playing = False  # Đặt lại trạng thái phát (về "stop completely" <dừng lại hoàn toàn> cho tới khi được gọi vào tiếp 1 phòng voice nào đó)
+            last_user = None
+            is_playing = False
 
+
+
+
+#Run token bot
 client.run(TOKEN)

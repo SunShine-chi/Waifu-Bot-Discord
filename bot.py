@@ -64,6 +64,9 @@ async def Leave_command(ctx):
     else:
         await ctx.send("Em đang không ở cùng ai khác đâu")
 
+
+COMMAND_PREFIXES = ['!', '?', '.', '/']
+
 @client.event
 async def on_message(message):
     global current_voice_channels, current_text_channels
@@ -71,6 +74,12 @@ async def on_message(message):
     if message.author == client.user:
         return
 
+    # Kiểm tra xem tin nhắn có phải là lệnh không
+    if any(message.content.startswith(prefix) for prefix in COMMAND_PREFIXES):
+        await client.process_commands(message)
+        return  # Nếu là lệnh, không cần đọc tin nhắn
+    
+    #For riêng Kenz
     if message.content.lower() == "anh ken là kiểu người gì?":
         await message.channel.send("Anh Ken là đồ tồi, đồi tồi tệ, tồi tệ nhất trên đời")
 

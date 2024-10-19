@@ -127,7 +127,7 @@ async def on_voice_state_update(member, before, after):
         if member.guild.id in current_voice_channels:
             del current_voice_channels[member.guild.id]
             del current_text_channels[member.guild.id]
-            last_user = None  # Đặt lại người gửi
-            is_playing = False  # Đặt lại trạng thái phát
+            last_user = None  # Đặt lại người gửi (về "không có")
+            is_playing = False  # Đặt lại trạng thái phát (về "stop completely" <dừng lại hoàn toàn> cho tới khi được gọi vào tiếp 1 phòng voice nào đó)
 
 client.run(TOKEN)

@@ -51,9 +51,9 @@ async def Join_command(ctx):
                 await channel.connect()
                 await ctx.send(f"{ctx.author.mention} Em nè, em nè!")
             except discord.ClientException:
-                await ctx.send("Bot đã ở trong một voice channel khác!")
+                await ctx.send("Em đang ở trong vòng tay người khác rồi!")
             except Exception as e:
-                await ctx.send(f"Đã xảy ra lỗi: {e}")
+                await ctx.send(f"Em đã bị lỗi rồi, huhu!: {e}")
         else:
             await ctx.send(f"{ctx.author.mention} Xin lỗi anh nhiều, em ở nơi khác rồi ạ! Em đang ở [**{current_voice_channels[ctx.guild.id].name}**]({current_voice_channels[ctx.guild.id].jump_url}) nè!.")
     else:
@@ -116,7 +116,7 @@ async def on_message(message):
                 while voice_client.is_playing():
                     await asyncio.sleep(1)
             else:
-                await message.channel.send(f"{message.author.mention} Bot không đang ở trong voice channel.")
+                await message.channel.send(f"{message.author.mention} Em không có đang ở trong kênh voice đâu.")
 
     await client.process_commands(message)
 

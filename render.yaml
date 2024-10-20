@@ -1,18 +1,8 @@
-# version: 1
-# services:
-#   - type: worker  # Đổi thành worker
-#     name: discord-bot
-#     env: python
-#     buildCommand: pip install -r requirements.txt
-#     startCommand: python bot.py
-#     autoDeploy: true
-
 version: 1
 services:
-  - type: web
+  - type: worker  # Đổi thành worker
     name: discord-bot
     env: python
     buildCommand: pip install -r requirements.txt
     startCommand: python bot.py
     autoDeploy: true
-    port: 3000  # Thêm dòng này để chỉ định cổng

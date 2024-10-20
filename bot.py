@@ -117,6 +117,8 @@ COMMAND_PREFIXES = ['!', '?', '.', '/']  # Đặt danh sách tiền tố ở đ�
 #Lọc các kí tự tiền tố dùng để gọi bot
 def is_command(message):
     return len(message) > 1 and any(message.startswith(prefix) for prefix in COMMAND_PREFIXES)
+
+#Đọc tin nhắn (Read Chat)
 @client.event
 async def on_message(message):
     global current_voice_channels, current_text_channels, last_user, is_playing

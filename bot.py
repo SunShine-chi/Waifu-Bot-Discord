@@ -48,8 +48,13 @@ async def Goodbye_command(ctx):
 
 
 #Join voice room
+
+# Thêm biến tạm để xác định Bot đã sẵn sàng để nói chuyện chưa
+is_ready = False
+
 @client.command(name='join')
 async def Join_command(ctx):
+    global is_ready  # Tham chiếu đến biến toàn cục
     if ctx.author.voice:
         channel = ctx.author.voice.channel
         if ctx.guild.id not in current_voice_channels:
@@ -63,6 +68,14 @@ async def Join_command(ctx):
                 audio_file_path = 'audio\Halo_HuTao.mp3'  # Đường dẫn tới file âm thanh chào
                 voice_client = discord.utils.get(client.voice_clients, guild=ctx.guild)
                 voice_client.play(discord.FFmpegPCMAudio(audio_file_path), after=lambda e: print('Done playing'))
+
+                # Đợi cho âm thanh phát xong
+                while voice_client.is_playing():
+                    await asyncio.sleep(1)
+
+                # Sau khi âm thanh phát xong, mới cho phép bot xử lý tới các việc như đọc tin nhắn                
+                is_ready = True # Đánh dấu, Set lại trạng thái là Bot đã sẵn sàng
+                await ctx.send("Em đã sẵn sàng để nói chuyện rồi nè <3 !")
 
             except discord.ClientException:
                 await ctx.send("Em đang ở trong vòng tay người khác rồi!")
@@ -122,8 +135,8 @@ async def on_message(message):
     if (message.guild.id in current_voice_channels and
             message.author.voice and
             message.author.voice.channel == current_voice_channels[message.guild.id] and
-            message.channel == current_text_channels[message.guild.id]):
-        
+            message.channel == current_text_channels[message.guild.id] and is_ready): # <=== Chỉ xử lí phần đọc chat khi BOT READY: SẴN SÀNG # Chỉ xử lý khi bot đã sẵn sàng):
+                                                                                                                ### VERRY IMPORTANT ###
         username = message.author.display_name
         tts_text = f"{username} nói: {message.content}"
         
@@ -179,7 +192,7 @@ async def on_message(message):
                                                                         # ---> Sẽ tự động out khỏi phòng #
 @client.event
 async def on_voice_state_update(member, before, after):
-    global current_voice_channels, last_user, is_playing
+    global current_voice_channels, last_user, is_playing, is_ready
     if member.guild.id in current_voice_channels and member.guild.voice_client:
         voice_client = member.guild.voice_client
 
@@ -190,7 +203,7 @@ async def on_voice_state_update(member, before, after):
             del current_text_channels[member.guild.id]
             last_user = None
             is_playing = False
-
+            is_ready = False  # Đặt lại trạng thái sẵn sàng
 
 
 

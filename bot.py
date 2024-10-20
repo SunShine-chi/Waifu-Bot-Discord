@@ -58,6 +58,12 @@ async def Join_command(ctx):
                 current_text_channels[ctx.guild.id] = ctx.channel
                 await channel.connect()
                 await ctx.send(f"{ctx.author.mention} Em nè, em nè!")
+
+                # Phát âm thanh chào mừng
+                audio_file_path = 'audio\Halo_HuTao.mp3'  # Đường dẫn tới file âm thanh chào
+                voice_client = discord.utils.get(client.voice_clients, guild=ctx.guild)
+                voice_client.play(discord.FFmpegPCMAudio(audio_file_path), after=lambda e: print('Done playing'))
+
             except discord.ClientException:
                 await ctx.send("Em đang ở trong vòng tay người khác rồi!")
             except Exception as e:
@@ -72,12 +78,26 @@ async def Join_command(ctx):
 @client.command(name='leave')
 async def Leave_command(ctx):
     if ctx.guild.id in current_voice_channels:
+
+        voice_client = ctx.guild.voice_client
+        
+        # Phát âm thanh tạm biệt
+        audio_file_path = 'audio\G9_HuTao.mp3'  # Đường dẫn tới file âm thanh tạm biệt
+        voice_client.play(discord.FFmpegPCMAudio(audio_file_path), after=lambda e: print('Done playing'))
+
+        # Đợi cho đến khi âm thanh phát xong
+        while voice_client.is_playing():
+            await asyncio.sleep(1)
+
+
         await ctx.guild.voice_client.disconnect()
         del current_voice_channels[ctx.guild.id]
         del current_text_channels[ctx.guild.id]
         await ctx.send("Giờ mình phải chia xa ư?")
     else:
         await ctx.send("Em đang không ở cùng ai khác đâu")
+
+        
 COMMAND_PREFIXES = ['!', '?', '.', '/']  # Đặt danh sách tiền tố ở đây
 
 

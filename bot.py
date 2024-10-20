@@ -157,8 +157,13 @@ async def on_message(message):
             tts.save(f"{temp_file.name}.mp3")
             voice_client = discord.utils.get(client.voice_clients, guild=message.guild)
             if voice_client and voice_client.is_connected():
-                voice_client.play(discord.FFmpegPCMAudio(f"{temp_file.name}.mp3", executable="E:/ffmpeg/bin/ffmpeg.exe"), after=lambda e: print('Done playing'))
                 
+                # Play audio (text chat -> file audio.mp3)  của  Ver 1.2.1
+                voice_client.play(discord.FFmpegPCMAudio(f"{temp_file.name}.mp3", executable="E:/ffmpeg/bin/ffmpeg.exe"), after=lambda e: print('Done playing'))
+
+                # Play audio (text chat -> file audio.mp3)  của  Ver 1.2.2
+                voice_client.play(discord.FFmpegPCMAudio(f"{temp_file.name}.mp3"), after=lambda e: print('Done playing'))
+
                 # Đợi cho đến khi âm thanh phát xong
                 while voice_client.is_playing():
                     await asyncio.sleep(1)

@@ -65,7 +65,7 @@ async def Join_command(ctx):
                 await ctx.send(f"{ctx.author.mention} Em nè, em nè!")
 
                 # Phát âm thanh chào mừng
-                audio_file_path = 'audio\Halo_HuTao.mp3'  # Đường dẫn tới file âm thanh chào
+                audio_file_path = 'audio/Halo_HuTao.mp3'  # Đường dẫn tới file âm thanh chào
                 voice_client = discord.utils.get(client.voice_clients, guild=ctx.guild)
                 voice_client.play(discord.FFmpegPCMAudio(audio_file_path), after=lambda e: print('Done playing'))
 
@@ -95,7 +95,7 @@ async def Leave_command(ctx):
         voice_client = ctx.guild.voice_client
         
         # Phát âm thanh tạm biệt
-        audio_file_path = 'audio\G9_HuTao.mp3'  # Đường dẫn tới file âm thanh tạm biệt
+        audio_file_path = 'audio/G9_HuTao.mp3'  # Đường dẫn tới file âm thanh tạm biệt
         voice_client.play(discord.FFmpegPCMAudio(audio_file_path), after=lambda e: print('Done playing'))
 
         # Đợi cho đến khi âm thanh phát xong
@@ -157,12 +157,13 @@ async def on_message(message):
             tts.save(f"{temp_file.name}.mp3")
             voice_client = discord.utils.get(client.voice_clients, guild=message.guild)
             if voice_client and voice_client.is_connected():
-                
+
                 # Play audio (text chat -> file audio.mp3)  của  Ver 1.2.1
-                voice_client.play(discord.FFmpegPCMAudio(f"{temp_file.name}.mp3", executable="E:/ffmpeg/bin/ffmpeg.exe"), after=lambda e: print('Done playing'))
+                # voice_client.play(discord.FFmpegPCMAudio(f"{temp_file.name}.mp3", executable="E:/ffmpeg/bin/ffmpeg.exe"), after=lambda e: print('Done playing'))
 
                 # Play audio (text chat -> file audio.mp3)  của  Ver 1.2.2
-                voice_client.play(discord.FFmpegPCMAudio(f"{temp_file.name}.mp3"), after=lambda e: print('Done playing'))
+                voice_client.play(discord.FFmpegPCMAudio(f"{temp_file.name}.mp3", executable="ffmpeg"), after=lambda e: print('Done playing'))
+
 
                 # Đợi cho đến khi âm thanh phát xong
                 while voice_client.is_playing():

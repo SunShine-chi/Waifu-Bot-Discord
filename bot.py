@@ -5,7 +5,8 @@ import os
 from dotenv import load_dotenv
 import tempfile
 import asyncio
-
+from keep_alive import keep_alive
+keep_alive()
 
 
 load_dotenv()

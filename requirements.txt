@@ -2,3 +2,4 @@ discord.py
 gtts
 python-dotenv
 PyNaCl
+flask

@@ -141,12 +141,13 @@ async def on_message(message):
             message.channel == current_text_channels[message.guild.id] and is_ready): # <=== Chỉ xử lí phần đọc chat khi BOT READY: SẴN SÀNG # Chỉ xử lý khi bot đã sẵn sàng):
                                                                                                                 ### VERRY IMPORTANT ###
         username = message.author.display_name
-        tts_text = f"{username} nói: {message.content}"
         
         
                                     #===============================================================================================#
                                                 # VER.1. cho Quét, Xử lí nội dung tin nhắn để chuẩn bị cho TTS (Text To Speech).
 
+        # tts_text = f"{username} nói: {message.content}"
+        
         # # Kiểm tra xem có phải người này là người đang nhắn trước đó không
         # if last_user == username and is_playing:
         #     # Nếu là người nhắn liên tiếp, chỉ đọc nội dung

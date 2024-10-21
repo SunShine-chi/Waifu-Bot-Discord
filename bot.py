@@ -137,9 +137,11 @@ async def on_message(message):
         return   
 
         # Xử lý mention để lấy tên hiển thị
-    content = message.content
-    for mention in message.mentions:
-        content = content.replace(mention.mention, mention.display_name) #Thực hiện thay thế 'displayname' vào 'ID user'
+    content = message.content  # Lấy nội dung gốc của tin nhắn
+    if message.mentions:  # Kiểm tra xem có người dùng nào được tag không
+        for mention in message.mentions:
+            # Thay thế tất cả các mentions bằng display_name của người dùng
+            content = content.replace(mention.mention, mention.display_name) #Thực hiện thay thế 'displayname' vào 'ID user'
 
     if message.content.lower() == "anh ken là kiểu người gì?":
         await message.channel.send("Anh Ken là đồ tồi, đồi tồi tệ, tồi tệ nhất trên đời")

@@ -95,6 +95,10 @@ async def Leave_command(ctx):
 
         voice_client = ctx.guild.voice_client
         
+        # Dừng mọi hoạt động phát âm thanh
+        if voice_client.is_playing():
+            voice_client.stop()  # Dừng âm thanh đang phát
+            
         # Phát âm thanh tạm biệt
         audio_file_path = 'audio/G9_HuTao.mp3'  # Đường dẫn tới file âm thanh tạm biệt
         voice_client.play(discord.FFmpegPCMAudio(audio_file_path), after=lambda e: print('Done playing'))
@@ -132,6 +136,11 @@ async def on_message(message):
         await client.process_commands(message)
         return   
 
+        # Xử lý mention để lấy tên hiển thị
+    content = message.content
+    for mention in message.mentions:
+        content = content.replace(mention.mention, mention.display_name) #Thực hiện thay thế 'displayname' vào 'ID user'
+
     if message.content.lower() == "anh ken là kiểu người gì?":
         await message.channel.send("Anh Ken là đồ tồi, đồi tồi tệ, tồi tệ nhất trên đời")
 
@@ -141,47 +150,47 @@ async def on_message(message):
             message.channel == current_text_channels[message.guild.id] and is_ready): # <=== Chỉ xử lí phần đọc chat khi BOT READY: SẴN SÀNG # Chỉ xử lý khi bot đã sẵn sàng):
                                                                                                                 ### VERRY IMPORTANT ###
         username = message.author.display_name
-        
+        tts_text = f"{username} nói: {content}"  # Sử dụng `content` đã xử lý
+
+        #Debug tts_text
+        print(f"TTS Text: {tts_text}")
         
                                     #===============================================================================================#
                                                 # VER.1. cho Quét, Xử lí nội dung tin nhắn để chuẩn bị cho TTS (Text To Speech).
 
-        # tts_text = f"{username} nói: {message.content}"
+        #tts_text = f"{username} nói: {message.content}"
         
-        # # Kiểm tra xem có phải người này là người đang nhắn trước đó không
-        # if last_user == username and is_playing:
-        #     # Nếu là người nhắn liên tiếp, chỉ đọc nội dung
-        #     tts = gTTS(text=message.content, lang='vi')
-        # else:
-        #     # Nếu là người vừa nhắn hoặc người khác nhắn cắt ngang, đọc lại cả tên giới thiệu như bình thường
-        #     tts = gTTS(text=tts_text, lang='vi')
-        #     is_playing = True  # Đánh dấu là đang phát giọng nói đọc tin nhắn
-        #     last_user = username  # Cập nhật lại người gửi tin nhắn
-
-
-                        #==================================================================================================================================#
-                                                        # Update VER.2. cho Quét, Xử lí nội dung tin nhắn để chuẩn bị cho TTS: Thay thế việc 
-                                                            # thay vì đọc ID của người dùng (nếu có người tag <@username>) thì sẽ đọc display name (tên hiển thị)
-                                                                #  của người dùng được tag.
-
-         # Lấy nội dung tin nhắn và loại bỏ các tag nếu có
-        content_without_tags = message.content
-
-        # Thay thế các tag người dùng bằng tên hiển thị của họ
-        for mention in message.mentions:
-            content_without_tags = content_without_tags.replace(f"<@!{mention.id}>", mention.display_name)
-
         # Kiểm tra xem có phải người này là người đang nhắn trước đó không
         if last_user == username and is_playing:
             # Nếu là người nhắn liên tiếp, chỉ đọc nội dung
-            tts = gTTS(text=content_without_tags, lang='vi')
+            tts = gTTS(text=message.content, lang='vi')
         else:
             # Nếu là người vừa nhắn hoặc người khác nhắn cắt ngang, đọc lại cả tên giới thiệu như bình thường
-            tts = gTTS(text=f"{username} nói: {content_without_tags}", lang='vi')
-            is_playing = True
-            last_user = username
+            tts = gTTS(text=tts_text, lang='vi')
+            is_playing = True  # Đánh dấu là đang phát giọng nói đọc tin nhắn
+            last_user = username  # Cập nhật lại người gửi tin nhắn
 
-                            #==========================================================================================================#
+
+
+
+                        #===================================================================================#
+                                         # VER.2. (BỊ BỎ)
+        # content_without_tags = message.content
+
+        # # Thay thế các tag người dùng bằng tên hiển thị của họ
+        # for mention in message.mentions:
+        #     content_without_tags = content_without_tags.replace(f"<@!{mention.id}>", mention.display_name)
+
+        # # Kiểm tra xem có phải người này là người đang nhắn trước đó không
+        # if last_user == username and is_playing:
+        #     # Nếu là người nhắn liên tiếp, chỉ đọc nội dung
+        #     tts = gTTS(text=content_without_tags, lang='vi')
+        # else:
+        #     # Nếu là người vừa nhắn hoặc người khác nhắn cắt ngang, đọc lại cả tên giới thiệu như bình thường
+        #     tts = gTTS(text=f"{username} nói: {content_without_tags}", lang='vi')
+        #     is_playing = True
+        #     last_user = username               
+
 
 
         # Tạo và phát file âm thanh

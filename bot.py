@@ -137,11 +137,17 @@ async def on_message(message):
         return   
 
         # Xử lý mention để lấy tên hiển thị
-    content = message.content  # Lấy nội dung gốc của tin nhắn
-    if message.mentions:  # Kiểm tra xem có người dùng nào được tag không
-        for mention in message.mentions:
-            # Thay thế tất cả các mentions bằng display_name của người dùng
-            content = content.replace(mention.mention, mention.display_name) #Thực hiện thay thế 'displayname' vào 'ID user'
+    content = message.content
+    print(content)
+    for mention in message.mentions:
+        content = content.replace(mention.mention, mention.display_name) #Thực hiện thay thế 'displayname' vào 'ID user'
+        print(content)
+    #         # Xử lý mention để lấy tên hiển thị
+    # content = message.content  # Lấy nội dung gốc của tin nhắn
+    # if message.mentions:  # Kiểm tra xem có người dùng nào được tag không
+    #     for mention in message.mentions:
+    #         # Thay thế tất cả các mentions bằng display_name của người dùng
+    #         content = content.replace(mention.mention, mention.display_name) #Thực hiện thay thế 'displayname' vào 'ID user'
 
     if message.content.lower() == "anh ken là kiểu người gì?":
         await message.channel.send("Anh Ken là đồ tồi, đồi tồi tệ, tồi tệ nhất trên đời")
@@ -165,7 +171,7 @@ async def on_message(message):
         # Kiểm tra xem có phải người này là người đang nhắn trước đó không
         if last_user == username and is_playing:
             # Nếu là người nhắn liên tiếp, chỉ đọc nội dung
-            tts = gTTS(text=message.content, lang='vi')
+            tts = gTTS(text=content, lang='vi')
         else:
             # Nếu là người vừa nhắn hoặc người khác nhắn cắt ngang, đọc lại cả tên giới thiệu như bình thường
             tts = gTTS(text=tts_text, lang='vi')

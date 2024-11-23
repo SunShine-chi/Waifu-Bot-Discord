@@ -190,6 +190,11 @@ async def process_message_queue(guild_id):
         print(replace_custom_emoji)
         content = re.sub(r'<:(\w+):(\d+)>', replace_custom_emoji, content)
 
+        # Kiểm tra nếu tin nhắn là chứa đường link
+        url_pattern = re.compile(r'(https?://\S+|www\.\S+)')  # Biểu thức chính quy phát hiện đường link (URL)
+        if url_pattern.search(content):
+            content = "đây là đường link đó"
+
         # Xử lý emoji Unicode
         def clean_unicode_emoji(content):
             """Loại bỏ gạch dưới và đọc emoji Unicode."""

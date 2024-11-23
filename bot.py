@@ -166,7 +166,7 @@ async def on_message(message):
 import emoji
 
 async def process_message_queue(guild_id):
-    """Xử lý hàng đợi tin nhắn cho từng guild."""
+    """Xử lý hàng đợi tin nhắn cho từng server."""
     global last_user, is_playing, is_reading
 
     is_reading[guild_id] = True

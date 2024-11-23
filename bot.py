@@ -5,6 +5,7 @@ import os
 from dotenv import load_dotenv
 import tempfile
 import asyncio
+from collections import defaultdict
 from keep_alive import keep_alive
 keep_alive()
 
@@ -24,6 +25,11 @@ client = commands.Bot(command_prefix='!', intents=intents, case_insensitive=True
 
 current_voice_channels = {}
 current_text_channels = {}
+
+
+# Biến toàn cục cho hàng đợi tin nhắn và trạng thái đang phát
+message_queues = defaultdict(asyncio.Queue)  # Một hàng đợi cho mỗi guild
+is_reading = defaultdict(lambda: False)  # Đánh dấu trạng thái phát cho từng guild
 
 # Biến để theo dõi người gửi và trạng thái phát giọng nói
 last_user = None
@@ -56,6 +62,11 @@ is_ready = False
 @client.command(name='join')
 async def Join_command(ctx):
     global is_ready  # Tham chiếu đến biến toàn cục
+
+    # Đảm bảo kiểm tra trạng thái của bot trước khi tham gia voice channel
+    if ctx.guild.voice_client:
+        await ctx.guild.voice_client.disconnect()  # Ngắt kết nối nếu đang bị lỗi trạng thái
+
     if ctx.author.voice:
         channel = ctx.author.voice.channel
         if ctx.guild.id not in current_voice_channels:
@@ -126,101 +137,65 @@ def is_command(message):
 #Đọc tin nhắn (Read Chat)
 @client.event
 async def on_message(message):
-    global current_voice_channels, current_text_channels, last_user, is_playing
+    global current_voice_channels, current_text_channels
 
+    # Bỏ qua tin nhắn từ bot
     if message.author == client.user:
         return
 
-    # Kiểm tra xem tin nhắn có phải là lệnh không
+    # Xử lý nếu là lệnh bot
     if is_command(message.content):
         await client.process_commands(message)
-        return   
+        return
 
-        # Xử lý mention để lấy tên hiển thị
-    content = message.content
-    print(content)
-    for mention in message.mentions:
-        content = content.replace(mention.mention, mention.display_name) #Thực hiện thay thế 'displayname' vào 'ID user'
-        print(content)
-    #         # Xử lý mention để lấy tên hiển thị
-    # content = message.content  # Lấy nội dung gốc của tin nhắn
-    # if message.mentions:  # Kiểm tra xem có người dùng nào được tag không
-    #     for mention in message.mentions:
-    #         # Thay thế tất cả các mentions bằng display_name của người dùng
-    #         content = content.replace(mention.mention, mention.display_name) #Thực hiện thay thế 'displayname' vào 'ID user'
-
-    if message.content.lower() == "anh ken là kiểu người gì?":
-        await message.channel.send("Anh Ken là đồ tồi, đồi tồi tệ, tồi tệ nhất trên đời")
-
+    # Kiểm tra nếu bot đang ở voice channel và sẵn sàng đọc tin nhắn
     if (message.guild.id in current_voice_channels and
-            message.author.voice and
-            message.author.voice.channel == current_voice_channels[message.guild.id] and
-            message.channel == current_text_channels[message.guild.id] and is_ready): # <=== Chỉ xử lí phần đọc chat khi BOT READY: SẴN SÀNG # Chỉ xử lý khi bot đã sẵn sàng):
-                                                                                                                ### VERRY IMPORTANT ###
+        message.author.voice and
+        message.author.voice.channel == current_voice_channels[message.guild.id] and
+        message.channel == current_text_channels[message.guild.id] and is_ready):
+        
+        # Thêm tin nhắn vào hàng đợi của guild
+        await message_queues[message.guild.id].put(message)
+
+        # Nếu bot không đọc tin nhắn nào, bắt đầu task xử lý tin nhắn
+        if not is_reading[message.guild.id]:
+            asyncio.create_task(process_message_queue(message.guild.id))
+
+async def process_message_queue(guild_id):
+    """Xử lý hàng đợi tin nhắn cho từng guild."""
+    global last_user, is_playing, is_reading
+
+    is_reading[guild_id] = True
+
+    while not message_queues[guild_id].empty():
+        message = await message_queues[guild_id].get()
+
         username = message.author.display_name
-        tts_text = f"{username} nói: {content}"  # Sử dụng `content` đã xử lý
+        content = message.content
 
-        #Debug tts_text
-        print(f"TTS Text: {tts_text}")
-        
-                                    #===============================================================================================#
-                                                # VER.1. cho Quét, Xử lí nội dung tin nhắn để chuẩn bị cho TTS (Text To Speech).
+        # Thay thế mentions bằng tên hiển thị
+        for mention in message.mentions:
+            content = content.replace(mention.mention, mention.display_name)
 
-        #tts_text = f"{username} nói: {message.content}"
-        
-        # Kiểm tra xem có phải người này là người đang nhắn trước đó không
-        if last_user == username and is_playing:
-            # Nếu là người nhắn liên tiếp, chỉ đọc nội dung
-            tts = gTTS(text=content, lang='vi')
-        else:
-            # Nếu là người vừa nhắn hoặc người khác nhắn cắt ngang, đọc lại cả tên giới thiệu như bình thường
-            tts = gTTS(text=tts_text, lang='vi')
-            is_playing = True  # Đánh dấu là đang phát giọng nói đọc tin nhắn
-            last_user = username  # Cập nhật lại người gửi tin nhắn
+        tts_text = f"{username} nói: {content}" if last_user != username or not is_playing else content
+        tts = gTTS(text=tts_text, lang='vi')
 
-
-
-
-                        #===================================================================================#
-                                         # VER.2. (BỊ BỎ)
-        # content_without_tags = message.content
-
-        # # Thay thế các tag người dùng bằng tên hiển thị của họ
-        # for mention in message.mentions:
-        #     content_without_tags = content_without_tags.replace(f"<@!{mention.id}>", mention.display_name)
-
-        # # Kiểm tra xem có phải người này là người đang nhắn trước đó không
-        # if last_user == username and is_playing:
-        #     # Nếu là người nhắn liên tiếp, chỉ đọc nội dung
-        #     tts = gTTS(text=content_without_tags, lang='vi')
-        # else:
-        #     # Nếu là người vừa nhắn hoặc người khác nhắn cắt ngang, đọc lại cả tên giới thiệu như bình thường
-        #     tts = gTTS(text=f"{username} nói: {content_without_tags}", lang='vi')
-        #     is_playing = True
-        #     last_user = username               
-
-
-
-        # Tạo và phát file âm thanh
+        # Tạo file tạm để phát
         with tempfile.NamedTemporaryFile(delete=True) as temp_file:
             tts.save(f"{temp_file.name}.mp3")
             voice_client = discord.utils.get(client.voice_clients, guild=message.guild)
             if voice_client and voice_client.is_connected():
+                voice_client.play(discord.FFmpegPCMAudio(f"{temp_file.name}.mp3", executable="ffmpeg"), after=lambda e: None)
 
-                # Play audio (text chat -> file audio.mp3)  của  Ver 1.2.1
-                # voice_client.play(discord.FFmpegPCMAudio(f"{temp_file.name}.mp3", executable="E:/ffmpeg/bin/ffmpeg.exe"), after=lambda e: print('Done playing'))
-
-                # Play audio (text chat -> file audio.mp3)  của  Ver 1.2.2
-                voice_client.play(discord.FFmpegPCMAudio(f"{temp_file.name}.mp3", executable="ffmpeg"), after=lambda e: print('Done playing'))
-
-
-                # Đợi cho đến khi âm thanh phát xong
+                # Đợi phát xong
                 while voice_client.is_playing():
                     await asyncio.sleep(1)
-            else:
-                await message.channel.send(f"{message.author.mention} Em không có đang ở trong kênh voice đâu.")
 
-    await client.process_commands(message)
+        # Cập nhật trạng thái
+        last_user = username
+        is_playing = True
+
+    is_reading[guild_id] = False
 
 
 

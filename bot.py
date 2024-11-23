@@ -65,40 +65,48 @@ is_ready = False
 async def Join_command(ctx):
     global is_ready  # Tham chiếu đến biến toàn cục
 
-    # Đảm bảo kiểm tra trạng thái của bot trước khi tham gia voice channel
-    if ctx.guild.voice_client:
-        await ctx.guild.voice_client.disconnect()  # Ngắt kết nối nếu đang bị lỗi trạng thái
+    voice_client = ctx.guild.voice_client  # Lấy trạng thái voice của bot trong server này
+
+    if voice_client and voice_client.is_connected():
+        # Nếu bot đã kết nối voice, kiểm tra xem nó có đúng phòng hay không
+        if ctx.author.voice and ctx.author.voice.channel == voice_client.channel:
+            await ctx.send(f"{ctx.author.mention} Em đang ở đây với anh mà~")
+            return
+        else:
+            # Nếu bot ở sai phòng, ngắt kết nối và chuẩn bị kết nối lại
+            await voice_client.disconnect()
+            del current_voice_channels[ctx.guild.id]
+            del current_text_channels[ctx.guild.id]
 
     if ctx.author.voice:
+        # Kết nối vào phòng voice của người gọi lệnh
         channel = ctx.author.voice.channel
-        if ctx.guild.id not in current_voice_channels:
-            try:
-                current_voice_channels[ctx.guild.id] = channel
-                current_text_channels[ctx.guild.id] = ctx.channel
-                await channel.connect()
-                await ctx.send(f"{ctx.author.mention} Em nè, em nè!")
+        try:
+            current_voice_channels[ctx.guild.id] = channel
+            current_text_channels[ctx.guild.id] = ctx.channel
+            await channel.connect()
+            await ctx.send(f"{ctx.author.mention} Em nè, em nè!")
 
-                # Phát âm thanh chào mừng
-                audio_file_path = 'audio/Halo_HuTao.mp3'  # Đường dẫn tới file âm thanh chào
-                voice_client = discord.utils.get(client.voice_clients, guild=ctx.guild)
-                voice_client.play(discord.FFmpegPCMAudio(audio_file_path), after=lambda e: print('Done playing'))
+            # Phát âm thanh chào mừng
+            audio_file_path = 'audio/Halo_HuTao.mp3'  # Đường dẫn tới file âm thanh chào
+            voice_client = discord.utils.get(client.voice_clients, guild=ctx.guild)
+            voice_client.play(discord.FFmpegPCMAudio(audio_file_path), after=lambda e: print('Done playing'))
 
-                # Đợi cho âm thanh phát xong
-                while voice_client.is_playing():
-                    await asyncio.sleep(1)
+            # Đợi cho âm thanh phát xong
+            while voice_client.is_playing():
+                await asyncio.sleep(1)
 
-                # Sau khi âm thanh phát xong, mới cho phép bot xử lý tới các việc như đọc tin nhắn                
-                is_ready = True # Đánh dấu, Set lại trạng thái là Bot đã sẵn sàng
-                await ctx.send("Em đã sẵn sàng để nói chuyện rồi nè <3 !")
+            # Sau khi âm thanh phát xong, mới cho phép bot xử lý các việc như đọc tin nhắn
+            is_ready = True
+            await ctx.send("Em đã sẵn sàng để nói chuyện rồi nè <3 !")
 
-            except discord.ClientException:
-                await ctx.send("Em đang ở trong vòng tay người khác rồi!")
-            except Exception as e:
-                await ctx.send(f"Em đã bị lỗi rồi, huhu!: {e}")
-        else:
-            await ctx.send(f"{ctx.author.mention} Xin lỗi anh nhiều, em ở nơi khác rồi ạ! Em đang ở [**{current_voice_channels[ctx.guild.id].name}**]({current_voice_channels[ctx.guild.id].jump_url}) nè!.")
+        except discord.ClientException:
+            await ctx.send("Em đang ở trong vòng tay người khác rồi!")
+        except Exception as e:
+            await ctx.send(f"Em đã bị lỗi rồi, huhu!: {e}")
     else:
         await ctx.send(f"{ctx.author.mention} Anh giờ đang ở đâu, em hiện không thấy anh~~~")
+
 
 
 #Leave voice room
@@ -253,20 +261,48 @@ async def process_message_queue(guild_id):
                                     ###---------------Update thêm khả năng TỰ ĐỘNG OUT PHÒNG VOICE nếu như không còn ai trong phòng voice đó------------------###
                                             # Có thể hiểu là: người dùng out hết khỏi phòng voice, member's quantity = 1 (nghĩa là chỉ còn 1 mình bot) #
                                                                         # ---> Sẽ tự động out khỏi phòng #
+# @client.event
+# async def on_voice_state_update(member, before, after):
+#     global current_voice_channels, last_user, is_playing, is_ready
+#     if member.guild.id in current_voice_channels and member.guild.voice_client:
+#         voice_client = member.guild.voice_client
+
+#         # Kiểm tra xem có còn ai trong kênh không
+#         if len(voice_client.channel.members) == 1:  # Chỉ còn bot
+#             await voice_client.disconnect()
+#             del current_voice_channels[member.guild.id]
+#             del current_text_channels[member.guild.id]
+#             last_user = None
+#             is_playing = False
+#             is_ready = False  # Đặt lại trạng thái sẵn sàng
+
 @client.event
 async def on_voice_state_update(member, before, after):
     global current_voice_channels, last_user, is_playing, is_ready
-    if member.guild.id in current_voice_channels and member.guild.voice_client:
-        voice_client = member.guild.voice_client
 
-        # Kiểm tra xem có còn ai trong kênh không
-        if len(voice_client.channel.members) == 1:  # Chỉ còn bot
+    voice_client = member.guild.voice_client
+
+    # Kiểm tra xem bot có đang ở trong voice channel không và cập nhật trạng thái
+    if voice_client:
+        # Nếu không còn ai trong voice channel ngoài bot, bot sẽ tự động thoát
+        if len(voice_client.channel.members) == 1:
             await voice_client.disconnect()
             del current_voice_channels[member.guild.id]
             del current_text_channels[member.guild.id]
             last_user = None
             is_playing = False
-            is_ready = False  # Đặt lại trạng thái sẵn sàng
+            is_ready = False
+
+    # Kiểm tra trạng thái của người dùng
+    if member == client.user and before.channel is not None and after.channel is None:
+        # Nếu bot bị ngắt kết nối đột ngột, cập nhật lại trạng thái
+        if member.guild.id in current_voice_channels:
+            del current_voice_channels[member.guild.id]
+            del current_text_channels[member.guild.id]
+            last_user = None
+            is_playing = False
+            is_ready = False
+
 
 
 

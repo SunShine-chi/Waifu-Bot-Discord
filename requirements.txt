@@ -1,5 +1,11 @@
-discord.py
-gtts
-python-dotenv
-PyNaCl
-flask
+# discord.py
+# gtts
+# python-dotenv
+# PyNaCl
+# flask
+discord.py>=2.0.0,<3.0.0
+gtts>=2.2.3
+python-dotenv>=1.0.0
+PyNaCl>=1.5.0
+flask>=2.0.0
+emoji>=2.0.0

@@ -6,6 +6,8 @@ from dotenv import load_dotenv
 import tempfile
 import asyncio
 from collections import defaultdict
+import emoji
+import re
 from keep_alive import keep_alive
 keep_alive()
 
@@ -161,6 +163,8 @@ async def on_message(message):
         if not is_reading[message.guild.id]:
             asyncio.create_task(process_message_queue(message.guild.id))
 
+import emoji
+
 async def process_message_queue(guild_id):
     """Xử lý hàng đợi tin nhắn cho từng guild."""
     global last_user, is_playing, is_reading
@@ -173,9 +177,30 @@ async def process_message_queue(guild_id):
         username = message.author.display_name
         content = message.content
 
-        # Thay thế mentions bằng tên hiển thị
+        # Xử lý mentions bằng tên hiển thị
         for mention in message.mentions:
             content = content.replace(mention.mention, mention.display_name)
+
+        # Thay thế emoji tùy chỉnh bằng tên hiển thị (hoặc bỏ luôn nếu không cần)
+        def replace_custom_emoji(match):
+            
+            emoji_name = match.group(1)  # Lấy tên emoji
+            return f"emoji {emoji_name}"  # Bạn có thể thay đổi cách đọc tại đây
+
+        print(replace_custom_emoji)
+        content = re.sub(r'<:(\w+):(\d+)>', replace_custom_emoji, content)
+
+        # Xử lý emoji Unicode
+        def clean_unicode_emoji(content):
+            """Loại bỏ gạch dưới và đọc emoji Unicode."""
+            demojized = emoji.demojize(content)  # Chuyển đọc từ id của emoji thành tên (như ":chin_chin:")
+            cleaned = demojized.replace('_', ' ')  # Bỏ gạch dưới khoảng cách trong emoji (nếu có)
+            return emoji.emojize(cleaned)  # Chuyển về dạng gốc nếu cần hoặc giữ nguyên dạng text ban đầu
+        
+
+        # Xử lý emoji Unicode (nếu cần, thay thế hoặc bỏ qua)
+        # content = emoji.demojize(content)  # Chuyển emoji Unicode thành tên 
+        content = clean_unicode_emoji(content)
 
         tts_text = f"{username} nói: {content}" if last_user != username or not is_playing else content
         tts = gTTS(text=tts_text, lang='vi')
@@ -196,6 +221,7 @@ async def process_message_queue(guild_id):
         is_playing = True
 
     is_reading[guild_id] = False
+
 
 
 

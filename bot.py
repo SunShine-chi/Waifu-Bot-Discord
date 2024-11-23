@@ -285,7 +285,7 @@ async def on_voice_state_update(member, before, after):
     # Kiểm tra xem bot có đang ở trong voice channel không và cập nhật trạng thái
     if voice_client:
         # Nếu không còn ai trong voice channel ngoài bot, bot sẽ tự động thoát
-        if len(voice_client.channel.members) == 1:
+        if len(voice_client.channel.members) == 1: #Chỉ còn bot
             await voice_client.disconnect()
             del current_voice_channels[member.guild.id]
             del current_text_channels[member.guild.id]
@@ -306,5 +306,5 @@ async def on_voice_state_update(member, before, after):
 
 
 
-#Run token bot
+#Chạy oken
 client.run(TOKEN)

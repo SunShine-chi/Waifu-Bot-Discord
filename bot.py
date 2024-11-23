@@ -185,7 +185,7 @@ async def process_message_queue(guild_id):
         def replace_custom_emoji(match):
             
             emoji_name = match.group(1)  # Lấy tên emoji
-            return f"emoji {emoji_name}"  # Bạn có thể thay đổi cách đọc tại đây
+            return f"emoji {emoji_name}"  # Sửa lại cách đọc
 
         print(replace_custom_emoji)
         content = re.sub(r'<:(\w+):(\d+)>', replace_custom_emoji, content)

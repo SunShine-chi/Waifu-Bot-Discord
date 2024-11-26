@@ -178,10 +178,13 @@ def remove_emoji(content):
     # Loại bỏ emoji Unicode
     content_no_unicode_emoji = emoji.replace_emoji(content, replace="")
 
-    # Loại bỏ emoji tùy chỉnh kiểu <:emoji_name:id>
+    # Loại bỏ emoji tùy chỉnh (emoji tĩnh, bản thường) có kiểu cú pháp <:emoji_name:id>
     content_no_custom_emoji = re.sub(r'<:(\w+):(\d+)>', '', content_no_unicode_emoji)
 
-    return content_no_custom_emoji
+    # Loại bỏ emoji động có kiểu cú pháp <a:emoji_name:id>
+    content_no_animated_emoji = re.sub(r'<a:(\w+):(\d+)>', '', content_no_custom_emoji)
+
+    return content_no_animated_emoji
 
 
 async def process_message_queue(guild_id):

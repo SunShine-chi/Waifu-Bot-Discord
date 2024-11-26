@@ -171,7 +171,18 @@ async def on_message(message):
         if not is_reading[message.guild.id]:
             asyncio.create_task(process_message_queue(message.guild.id))
 
-import emoji
+
+# Loại bỏ, không đọc emoji
+def remove_emoji(content):
+    """Loại bỏ emoji Unicode và emoji tùy chỉnh trong nội dung tin nhắn."""
+    # Loại bỏ emoji Unicode
+    content_no_unicode_emoji = emoji.replace_emoji(content, replace="")
+
+    # Loại bỏ emoji tùy chỉnh kiểu <:emoji_name:id>
+    content_no_custom_emoji = re.sub(r'<:(\w+):(\d+)>', '', content_no_unicode_emoji)
+
+    return content_no_custom_emoji
+
 
 async def process_message_queue(guild_id):
     """Xử lý hàng đợi tin nhắn cho từng server."""
@@ -185,23 +196,30 @@ async def process_message_queue(guild_id):
         username = message.author.display_name
         content = message.content
 
+        # Loại bỏ emoji trong nội dung tin nhắn
+        content = remove_emoji(content)
+
         # Xử lý mentions bằng tên hiển thị
         for mention in message.mentions:
             content = content.replace(mention.mention, mention.display_name)
 
-        # Thay thế emoji tùy chỉnh bằng tên hiển thị (hoặc bỏ luôn nếu không cần)
-        def replace_custom_emoji(match):
+        # # Thay thế emoji tùy chỉnh bằng tên hiển thị (hoặc bỏ luôn nếu không cần)
+        # def replace_custom_emoji(match):
             
-            emoji_name = match.group(1)  # Lấy tên emoji
-            return f"emoji {emoji_name}"  # Sửa lại cách đọc
+        #     emoji_name = match.group(1)  # Lấy tên emoji
+        #     return f"emoji {emoji_name}"  # Sửa lại cách đọc
 
-        print(replace_custom_emoji)
-        content = re.sub(r'<:(\w+):(\d+)>', replace_custom_emoji, content)
+        # print(replace_custom_emoji)
+        # content = re.sub(r'<:(\w+):(\d+)>', replace_custom_emoji, content)
 
         # Kiểm tra nếu tin nhắn là chứa đường link
         url_pattern = re.compile(r'(https?://\S+|www\.\S+)')  # Biểu thức chính quy phát hiện đường link (URL)
         if url_pattern.search(content):
             content = "đây là đường link đó"
+
+        # Bỏ qua tin nhắn trống sau khi xử lý
+        if not content.strip():
+            continue
 
         # Xử lý emoji Unicode
         def clean_unicode_emoji(content):

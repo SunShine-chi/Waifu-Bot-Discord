@@ -63,49 +63,57 @@ is_ready = False
 
 @client.command(name='join')
 async def Join_command(ctx):
-    global is_ready  # Tham chiếu đến biến toàn cục
+    global is_ready
 
-    voice_client = ctx.guild.voice_client  # Lấy trạng thái voice của bot trong server này
+    voice_client = ctx.guild.voice_client  # Trạng thái voice của bot trong server hiện tại
+    author_voice_state = ctx.author.voice  # Trạng thái voice của người gọi lệnh
 
+    # Kiểm tra nếu người gọi lệnh không ở phòng voice nào
+    if not author_voice_state:
+        await ctx.send(f"{ctx.author.mention} Anh giờ đang ở đâu, em hiện không thấy anh~~~")
+        return
+
+    # Kiểm tra nếu người dùng gọi lệnh không đang trong phòng voice hiện tại để gọi bot
+    if ctx.channel != current_text_channels.get(ctx.guild.id):
+        await ctx.send(f"{ctx.author.mention} Mình đang không chung thế giới với nhau rùi...")
+        return
+
+    # Kiểm tra nếu bot đã kết nối với phòng voice
     if voice_client and voice_client.is_connected():
-        # Nếu bot đã kết nối voice, kiểm tra xem nó có đúng phòng hay không
-        if ctx.author.voice and ctx.author.voice.channel == voice_client.channel:
+        # Nếu bot đang ở cùng phòng voice với người gọi lệnh
+        if author_voice_state.channel == voice_client.channel:
             await ctx.send(f"{ctx.author.mention} Em đang ở đây với anh mà~")
             return
         else:
-            # Nếu bot ở sai phòng, ngắt kết nối và chuẩn bị kết nối lại
-            await voice_client.disconnect()
-            del current_voice_channels[ctx.guild.id]
-            del current_text_channels[ctx.guild.id]
+            # Bot ở một phòng voice khác
+            await ctx.send(f"{ctx.author.mention} Em đang ở {voice_client.channel.name} mất rùi~")
+            return
 
-    if ctx.author.voice:
-        # Kết nối vào phòng voice của người gọi lệnh
-        channel = ctx.author.voice.channel
-        try:
-            current_voice_channels[ctx.guild.id] = channel
-            current_text_channels[ctx.guild.id] = ctx.channel
-            await channel.connect()
-            await ctx.send(f"{ctx.author.mention} Em nè, em nè!")
+    # Kết nối vào phòng voice của người gọi lệnh
+    try:
+        channel = author_voice_state.channel
+        current_voice_channels[ctx.guild.id] = channel
+        current_text_channels[ctx.guild.id] = ctx.channel
+        await channel.connect()
+        await ctx.send(f"{ctx.author.mention} Em nè, em nè!")
 
-            # Phát âm thanh chào mừng
-            audio_file_path = 'audio/Halo_HuTao.mp3'  # Đường dẫn tới file âm thanh chào
-            voice_client = discord.utils.get(client.voice_clients, guild=ctx.guild)
-            voice_client.play(discord.FFmpegPCMAudio(audio_file_path), after=lambda e: print('Done playing'))
+        # Phát âm thanh chào mừng
+        audio_file_path = 'audio/Halo_HuTao.mp3'
+        voice_client = discord.utils.get(client.voice_clients, guild=ctx.guild)
+        voice_client.play(discord.FFmpegPCMAudio(audio_file_path), after=lambda e: print('Done playing'))
 
-            # Đợi cho âm thanh phát xong
-            while voice_client.is_playing():
-                await asyncio.sleep(1)
+        # Đợi cho âm thanh phát xong
+        while voice_client.is_playing():
+            await asyncio.sleep(1)
 
-            # Sau khi âm thanh phát xong, mới cho phép bot xử lý các việc như đọc tin nhắn
-            is_ready = True
-            await ctx.send("Em đã sẵn sàng để nói chuyện rồi nè <3 !")
+        # Sau khi phát xong, bot sẵn sàng xử lý tin nhắn
+        is_ready = True
+        await ctx.send("Em đã sẵn sàng để nói chuyện rồi nè <3 !")
+    except discord.ClientException:
+        await ctx.send("Em đang ở trong vòng tay người khác rồi!")
+    except Exception as e:
+        await ctx.send(f"Em đã bị lỗi rồi, huhu!: {e}")
 
-        except discord.ClientException:
-            await ctx.send("Em đang ở trong vòng tay người khác rồi!")
-        except Exception as e:
-            await ctx.send(f"Em đã bị lỗi rồi, huhu!: {e}")
-    else:
-        await ctx.send(f"{ctx.author.mention} Anh giờ đang ở đâu, em hiện không thấy anh~~~")
 
 
 

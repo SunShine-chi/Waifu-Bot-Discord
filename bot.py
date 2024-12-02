@@ -88,7 +88,7 @@ async def Join_command(ctx):
     # Kiểm tra nếu `current_text_channels` đã được thiết lập rồi
     if ctx.guild.id in current_text_channels:
         # Nếu người dùng không gọi lệnh từ kênh chat đã liên kết của voice room
-        if ctx.channel != current_text_channels[ctx.guild.id]:
+        if ctx.channel.id != current_text_channels[ctx.guild.id].id:
             await ctx.send(f"{ctx.author.mention} Mình đang không chung thế giới với nhau rùi...")
             return
 

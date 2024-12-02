@@ -73,10 +73,6 @@ async def Join_command(ctx):
         await ctx.send(f"{ctx.author.mention} Anh giờ đang ở đâu, em hiện không thấy anh~~~")
         return
 
-    # Kiểm tra nếu người dùng gọi lệnh không đang trong phòng voice hiện tại để gọi bot
-    if ctx.channel != current_text_channels.get(ctx.guild.id):
-        await ctx.send(f"{ctx.author.mention} Mình đang không chung thế giới với nhau rùi...")
-        return
 
     # Kiểm tra nếu bot đã kết nối với phòng voice
     if voice_client and voice_client.is_connected():
@@ -87,6 +83,13 @@ async def Join_command(ctx):
         else:
             # Bot ở một phòng voice khác
             await ctx.send(f"{ctx.author.mention} Em đang ở {voice_client.channel.name} mất rùi~")
+            return
+        
+    # Kiểm tra nếu `current_text_channels` đã được thiết lập rồi
+    if ctx.guild.id in current_text_channels:
+        # Nếu người dùng không gọi lệnh từ kênh chat đã liên kết của voice room
+        if ctx.channel != current_text_channels[ctx.guild.id]:
+            await ctx.send(f"{ctx.author.mention} Mình đang không chung thế giới với nhau rùi...")
             return
 
     # Kết nối vào phòng voice của người gọi lệnh

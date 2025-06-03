@@ -136,85 +136,101 @@ async def on_voice_state_update(member, before, after):
 # === Commands Section ===
 # =====================
 
-@bot.command(name='hello')
-async def hello_command(ctx):
-    """Say hello with the first server emoji if available."""
-    if ctx.guild and ctx.guild.emojis:
-        await ctx.send(f"Hello, I'm Nắng's wife! {ctx.guild.emojis[0]}")
-    else:
-        await ctx.send("Hello, I'm Nắng's wife!")
+async def handle_hello(ctx_or_interaction):
+    guild = getattr(ctx_or_interaction, "guild", None)
+    emojis = getattr(guild, "emojis", []) if guild else []
+    msg = f"Hello, I'm Nắng's wife! {emojis[0]}" if emojis else "Hello, I'm Nắng's wife!"
+    if hasattr(ctx_or_interaction, "send"):  # prefix command
+        await ctx_or_interaction.send(msg)
+    elif hasattr(ctx_or_interaction, "response"):  # slash command
+        await ctx_or_interaction.response.send_message(msg)
 
-@bot.command(name='goodbye')
-async def goodbye_command(ctx):
-    """Say goodbye."""
-    await ctx.send("Bye bye, My Darling!")
+async def handle_goodbye(ctx_or_interaction):
+    msg = "Bye bye, My Darling!"
+    if hasattr(ctx_or_interaction, "send"):
+        await ctx_or_interaction.send(msg)
+    elif hasattr(ctx_or_interaction, "response"):
+        await ctx_or_interaction.response.send_message(msg)
 
-@bot.command(name='join')
-async def join_command(ctx):
-    """Join the user's voice channel and play a welcome sound."""
-    guild_id = ctx.guild.id
-    voice_client = ctx.guild.voice_client
-
-    # Kiểm tra user có ở voice không
-    if not ctx.author.voice:
-        await ctx.send(f"{ctx.author.mention} Anh giờ đang ở đâu, em hiện không thấy anh~~~")
-        return
-
-    voice_channel = ctx.author.voice.channel
-    text_channel = ctx.channel
-
-    # Chỉ cho phép gọi bot nếu tên text channel trùng với tên voice channel
-    if text_channel.name != voice_channel.name:
-        await ctx.send(f"Anh chỉ được gọi em ở chat room **{voice_channel.name}** thôi nhé!")
-        return
-
-    if voice_client and voice_client.is_connected():
-        if ctx.author.voice and ctx.author.voice.channel == voice_client.channel:
-            await ctx.send(f"{ctx.author.mention} Em đang ở đây với anh mà~")
+async def handle_join(ctx_or_interaction):
+    # Nếu là prefix command (ctx), thực hiện join voice như cũ
+    if hasattr(ctx_or_interaction, "author"):
+        ctx = ctx_or_interaction
+        guild_id = ctx.guild.id
+        voice_client = ctx.guild.voice_client
+        if not ctx.author.voice:
+            await ctx.send(f"{ctx.author.mention} Anh giờ đang ở đâu, em hiện không thấy anh~~~")
             return
-        else:
+        voice_channel = ctx.author.voice.channel
+        text_channel = ctx.channel
+        if text_channel.name != voice_channel.name:
+            await ctx.send(f"Anh chỉ được gọi em ở chat room **{voice_channel.name}** thôi nhé!")
+            return
+        if voice_client and voice_client.is_connected():
+            if ctx.author.voice and ctx.author.voice.channel == voice_client.channel:
+                await ctx.send(f"{ctx.author.mention} Em đang ở đây với anh mà~")
+                return
+            else:
+                await voice_client.disconnect()
+                bot.current_voice_channels.pop(guild_id, None)
+                bot.current_text_channels.pop(guild_id, None)
+        try:
+            bot.current_voice_channels[guild_id] = voice_channel
+            bot.current_text_channels[guild_id] = text_channel
+            await voice_channel.connect()
+            await ctx.send(f"{ctx.author.mention} Em nè, em nè!")
+            voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
+            if voice_client:
+                voice_client.play(discord.FFmpegPCMAudio(AUDIO_WELCOME), after=lambda e: print('Done playing'))
+                while voice_client.is_playing():
+                    await asyncio.sleep(1)
+            bot.is_ready = True
+            await ctx.send("Em đã sẵn sàng để nói chuyện rồi nè <3 !")
+        except discord.ClientException:
+            await ctx.send("Em đang ở trong vòng tay người khác rồi!")
+        except Exception as e:
+            await ctx.send(f"Em đã bị lỗi rồi, huhu!: {e}")
+    # Nếu là slash command (interaction), chỉ thông báo
+    elif hasattr(ctx_or_interaction, "response"):
+        await ctx_or_interaction.response.send_message("(Slash) Em không thể tự join voice channel qua slash command do hạn chế của Discord API. Hãy dùng lệnh prefix như !join hoặc /join truyền thống nhé!")
+
+async def handle_leave(ctx_or_interaction):
+    # Nếu là prefix command (ctx), thực hiện leave voice như cũ
+    if hasattr(ctx_or_interaction, "author"):
+        ctx = ctx_or_interaction
+        guild_id = ctx.guild.id
+        voice_client = ctx.guild.voice_client
+        if guild_id in bot.current_voice_channels and voice_client:
+            if voice_client.is_playing():
+                voice_client.stop()
+            voice_client.play(discord.FFmpegPCMAudio(AUDIO_GOODBYE), after=lambda e: print('Done playing'))
+            while voice_client.is_playing():
+                await asyncio.sleep(1)
             await voice_client.disconnect()
             bot.current_voice_channels.pop(guild_id, None)
             bot.current_text_channels.pop(guild_id, None)
+            await ctx.send("Giờ mình phải chia xa ư?")
+        else:
+            await ctx.send("Em đang không ở cùng ai khác đâu")
+    # Nếu là slash command (interaction), chỉ thông báo
+    elif hasattr(ctx_or_interaction, "response"):
+        await ctx_or_interaction.response.send_message("(Slash) Em không thể tự leave voice channel qua slash command do hạn chế của Discord API. Hãy dùng lệnh prefix như !leave hoặc /leave truyền thống nhé!")
 
-    try:
-        bot.current_voice_channels[guild_id] = voice_channel
-        bot.current_text_channels[guild_id] = text_channel
-        await voice_channel.connect()
-        await ctx.send(f"{ctx.author.mention} Em nè, em nè!")
+@bot.command(name='hello')
+async def hello_command(ctx):
+    await handle_hello(ctx)
 
-        # Play welcome audio
-        voice_client = discord.utils.get(bot.voice_clients, guild=ctx.guild)
-        if voice_client:
-            voice_client.play(discord.FFmpegPCMAudio(AUDIO_WELCOME), after=lambda e: print('Done playing'))
-            while voice_client.is_playing():
-                await asyncio.sleep(1)
+@bot.command(name='goodbye')
+async def goodbye_command(ctx):
+    await handle_goodbye(ctx)
 
-        bot.is_ready = True
-        await ctx.send("Em đã sẵn sàng để nói chuyện rồi nè <3 !")
-    except discord.ClientException:
-        await ctx.send("Em đang ở trong vòng tay người khác rồi!")
-    except Exception as e:
-        await ctx.send(f"Em đã bị lỗi rồi, huhu!: {e}")
+@bot.command(name='join')
+async def join_command(ctx):
+    await handle_join(ctx)
 
 @bot.command(name='leave')
 async def leave_command(ctx):
-    """Leave the voice channel and play a goodbye sound."""
-    guild_id = ctx.guild.id
-    voice_client = ctx.guild.voice_client
-
-    if guild_id in bot.current_voice_channels and voice_client:
-        if voice_client.is_playing():
-            voice_client.stop()
-        voice_client.play(discord.FFmpegPCMAudio(AUDIO_GOODBYE), after=lambda e: print('Done playing'))
-        while voice_client.is_playing():
-            await asyncio.sleep(1)
-        await voice_client.disconnect()
-        bot.current_voice_channels.pop(guild_id, None)
-        bot.current_text_channels.pop(guild_id, None)
-        await ctx.send("Giờ mình phải chia xa ư?")
-    else:
-        await ctx.send("Em đang không ở cùng ai khác đâu")
+    await handle_leave(ctx)
 
 # =====================
 # === Message Queue Processing ===

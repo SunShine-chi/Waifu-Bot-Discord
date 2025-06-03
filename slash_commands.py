@@ -12,11 +12,28 @@ def setup_slash_commands(bot):
     async def goodbye_slash(interaction: discord.Interaction):
         await handle_goodbye(interaction)
 
-    @bot.tree.command(name="join", description="Join the voice channel")
+    @bot.tree.command(name="join", description="Join the voice channel you are in")
     async def join_slash(interaction: discord.Interaction):
-        await handle_join(interaction, bot=bot, AUDIO_WELCOME=None)
+        # Tạo một context giả giống ctx cho handle_join
+        class FakeCtx:
+            def __init__(self, interaction):
+                self.guild = interaction.guild
+                self.author = interaction.user
+                self.channel = interaction.channel
+                self.send = interaction.response.send_message
+                self.bot = bot
+        fake_ctx = FakeCtx(interaction)
+        await handle_join(fake_ctx, bot=bot, AUDIO_WELCOME=None)
 
-    @bot.tree.command(name="leave", description="Leave the voice channel")
+    @bot.tree.command(name="leave", description="Leave the voice channel if bot is in")
     async def leave_slash(interaction: discord.Interaction):
-        await handle_leave(interaction, bot=bot, AUDIO_GOODBYE=None)
+        class FakeCtx:
+            def __init__(self, interaction):
+                self.guild = interaction.guild
+                self.author = interaction.user
+                self.channel = interaction.channel
+                self.send = interaction.response.send_message
+                self.bot = bot
+        fake_ctx = FakeCtx(interaction)
+        await handle_leave(fake_ctx, bot=bot, AUDIO_GOODBYE=None)
 

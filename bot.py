@@ -11,6 +11,7 @@ from discord.ext import commands
 from gtts import gTTS
 from dotenv import load_dotenv
 import emoji
+from slash_commands import setup_slash_commands
 
 # Local imports
 from keep_alive import keep_alive
@@ -33,11 +34,19 @@ TOKEN = os.getenv('DISCORD_TOKEN')
 if TOKEN is None:
     raise ValueError("Token không được tìm thấy! (.env).")
 
+class MyBot(commands.Bot):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    async def setup_hook(self):
+        setup_slash_commands(self)
+        await self.tree.sync()
+
 intents = discord.Intents.default()
 intents.messages = True
 intents.message_content = True
 
-bot = commands.Bot(command_prefix=COMMAND_PREFIXES[0], intents=intents, case_insensitive=True)
+bot = MyBot(command_prefix=COMMAND_PREFIXES[0], intents=intents, case_insensitive=True)
 
 # =====================
 # === State Storage ===
@@ -130,7 +139,7 @@ async def on_voice_state_update(member, before, after):
 @bot.command(name='hello')
 async def hello_command(ctx):
     """Say hello with the first server emoji if available."""
-    if ctx.guild.emojis:
+    if ctx.guild and ctx.guild.emojis:
         await ctx.send(f"Hello, I'm Nắng's wife! {ctx.guild.emojis[0]}")
     else:
         await ctx.send("Hello, I'm Nắng's wife!")

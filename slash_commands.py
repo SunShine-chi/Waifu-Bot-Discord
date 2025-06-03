@@ -1,6 +1,6 @@
 import discord
 from discord import app_commands
-from bot import handle_hello, handle_goodbye, handle_join, handle_leave
+from command_handlers import handle_hello, handle_goodbye, handle_join, handle_leave
 
 # Lưu ý: Các slash command không thể join/leave voice channel như prefix command do hạn chế context của interaction.
 def setup_slash_commands(bot):
@@ -8,15 +8,15 @@ def setup_slash_commands(bot):
     async def hello_slash(interaction: discord.Interaction):
         await handle_hello(interaction)
 
-    @bot.tree.command(name="goodbye", description="Say goodbye ")
+    @bot.tree.command(name="goodbye", description="Say goodbye")
     async def goodbye_slash(interaction: discord.Interaction):
         await handle_goodbye(interaction)
 
-    @bot.tree.command(name="join", description="Join thethe voice channel")
+    @bot.tree.command(name="join", description="Join the voice channel")
     async def join_slash(interaction: discord.Interaction):
-        await handle_join(interaction)
+        await handle_join(interaction, bot=bot, AUDIO_WELCOME=None)
 
     @bot.tree.command(name="leave", description="Leave the voice channel")
     async def leave_slash(interaction: discord.Interaction):
-        await handle_leave(interaction)
+        await handle_leave(interaction, bot=bot, AUDIO_GOODBYE=None)
 

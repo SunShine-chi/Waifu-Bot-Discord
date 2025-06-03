@@ -223,7 +223,7 @@ async def process_message_queue(guild_id):
             content = content.replace(mention.mention, mention.display_name)
         url_pattern = re.compile(r'(https?://\S+|www\.\S+)')
         if url_pattern.search(content):
-            content = "đây là đường link đó"
+            content = ""
         if not content.strip():
             continue
         content = clean_unicode_emoji(content)

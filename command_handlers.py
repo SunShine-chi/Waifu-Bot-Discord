@@ -20,7 +20,7 @@ async def handle_goodbye(ctx_or_interaction):
 async def handle_join(ctx_or_interaction, bot=None, AUDIO_WELCOME=None):
     is_slash = hasattr(ctx_or_interaction, '_interaction')
     if is_slash:
-        await ctx_or_interaction.send('Đang kết nối vào voice channel, vui lòng chờ...')
+        await ctx_or_interaction.send()
     if hasattr(ctx_or_interaction, "author"):
         ctx = ctx_or_interaction
         guild_id = ctx.guild.id
@@ -68,7 +68,7 @@ async def handle_join(ctx_or_interaction, bot=None, AUDIO_WELCOME=None):
 async def handle_leave(ctx_or_interaction, bot=None, AUDIO_GOODBYE=None):
     is_slash = hasattr(ctx_or_interaction, '_interaction')
     if is_slash:
-        await ctx_or_interaction.send('Đang rời khỏi voice channel, vui lòng chờ...')
+        await ctx_or_interaction.send()
     if hasattr(ctx_or_interaction, "author"):
         ctx = ctx_or_interaction
         guild_id = ctx.guild.id

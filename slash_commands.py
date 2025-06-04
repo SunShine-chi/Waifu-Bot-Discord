@@ -23,11 +23,11 @@ def setup_slash_commands(bot):
 
     @bot.tree.command(name="hello", description="Say hello")
     async def hello_slash(interaction: discord.Interaction):
-        await handle_hello(interaction)
+        await handle_hello(interaction, bot=bot)
 
     @bot.tree.command(name="goodbye", description="Say goodbye")
     async def goodbye_slash(interaction: discord.Interaction):
-        await handle_goodbye(interaction)
+        await handle_goodbye(interaction, bot=bot)
 
     @bot.tree.command(name="join", description="Join the voice channel you are in")
     async def join_slash(interaction: discord.Interaction):

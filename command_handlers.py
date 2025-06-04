@@ -1,17 +1,56 @@
 import discord
 import asyncio
 
-async def handle_hello(ctx_or_interaction):
-    guild = getattr(ctx_or_interaction, "guild", None)
-    emojis = getattr(guild, "emojis", []) if guild else []
-    msg = f"Hello, I'm Nắng's wife! {emojis[0]}" if emojis else "Hello, I'm Nắng's wife!"
+async def handle_hello(ctx_or_interaction, bot=None):
+    author_id = None
+    if hasattr(ctx_or_interaction, "author"):
+        author_id = ctx_or_interaction.author.id
+    elif hasattr(ctx_or_interaction, "user"):
+        author_id = ctx_or_interaction.user.id
+
+    is_owner = False
+    owner_id = None
+
+    if bot:
+        app_info = await bot.application_info()
+        owner_id = app_info.owner.id
+        if author_id == owner_id:
+            is_owner = True
+
+    if is_owner:
+        guild = getattr(ctx_or_interaction, "guild", None)
+        emojis = getattr(guild, "emojis", []) if guild else []
+        msg = f"Ahola, my Darling! {emojis[0]}" if emojis else "Ahola, my Darling!"
+    else:
+        user_name = ctx_or_interaction.author.display_name if hasattr(ctx_or_interaction, "author") else ctx_or_interaction.user.display_name
+        owner_mention = f"<@{owner_id}>" if owner_id else "chủ nhân của em"
+        msg = f"Xin chào bạn {user_name} nha! Em là vợ của Nắng nè~~~! Đây là link tài khoản của anh {owner_mention} ấy á!:33"
+
     if hasattr(ctx_or_interaction, "send"):
         await ctx_or_interaction.send(msg)
     elif hasattr(ctx_or_interaction, "response"):
         await ctx_or_interaction.response.send_message(msg)
 
-async def handle_goodbye(ctx_or_interaction):
-    msg = "Bye bye, My Darling!"
+async def handle_goodbye(ctx_or_interaction, bot=None):
+    author_id = None
+    if hasattr(ctx_or_interaction, "author"):
+        author_id = ctx_or_interaction.author.id
+    elif hasattr(ctx_or_interaction, "user"):
+        author_id = ctx_or_interaction.user.id
+
+    is_owner = False
+    if bot:
+        app_info = await bot.application_info()
+        owner_id = app_info.owner.id
+        if author_id == owner_id:
+            is_owner = True
+
+    if is_owner:
+        msg = "Anh Nắng ngủ ngon ạ! Iu anh, Darling <3"
+    else:
+        user_name = ctx_or_interaction.author.display_name if hasattr(ctx_or_interaction, "author") else ctx_or_interaction.user.display_name
+        msg = f"Ngủ ngon nha {user_name}, người có vẻ là bạn của Darling!"
+
     if hasattr(ctx_or_interaction, "send"):
         await ctx_or_interaction.send(msg)
     elif hasattr(ctx_or_interaction, "response"):

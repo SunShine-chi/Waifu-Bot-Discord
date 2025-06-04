@@ -136,11 +136,11 @@ async def on_voice_state_update(member, before, after):
 
 @bot.command(name='hello')
 async def hello_command(ctx):
-    await handle_hello(ctx)
+    await handle_hello(ctx, bot=bot)
 
 @bot.command(name='goodbye')
 async def goodbye_command(ctx):
-    await handle_goodbye(ctx)
+    await handle_goodbye(ctx, bot=bot)
 
 @bot.command(name='join')
 async def join_command(ctx):

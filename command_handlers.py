@@ -89,4 +89,20 @@ async def handle_leave(ctx_or_interaction, bot=None, AUDIO_GOODBYE=None):
     elif hasattr(ctx_or_interaction, "response") and not is_slash:
         await ctx_or_interaction.response.send_message(
             "Hãy dùng lệnh prefix như !leave hoặc /leave truyền thống nhé!"
-        ) 
+        )
+
+async def handle_helphumi(ctx_or_interaction):
+    help_message = (
+        "Chào anh nha! Em là vợ của Nắng đây <3! Anh có thể dùng các lệnh sau để tương tác với em nhé :33:\n"
+        "\n"  # Add an empty line for better readability
+        "**`/hello` hoặc `!hello`**: Em sẽ chào hỏi anh đó!\n"
+        "**`/goodbye` hoặc `!goodbye`**: Em sẽ tạm biệt anh đó!\n"
+        "**`/join` hoặc `!join`**: Em sẽ vào kênh thoại anh đang ở và nói chuyện với anh đó!\n"
+        "**`/leave` hoặc `!leave`**: Em sẽ rời kênh thoại và tạm biệt anh đó!\n"
+        "\n"
+        "Em rất vui được trò chuyện cùng anh. Anh còn muốn biết gì nữa không?"
+    )
+    if hasattr(ctx_or_interaction, "send"):
+        await ctx_or_interaction.send(help_message)
+    elif hasattr(ctx_or_interaction, "response"):
+        await ctx_or_interaction.response.send_message(help_message) 

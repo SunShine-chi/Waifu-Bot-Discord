@@ -12,7 +12,7 @@ from gtts import gTTS
 from dotenv import load_dotenv
 import emoji
 from slash_commands import setup_slash_commands
-from command_handlers import handle_hello, handle_goodbye, handle_join, handle_leave
+from command_handlers import handle_hello, handle_goodbye, handle_join, handle_leave, handle_helphumi
 from path_config import COMMAND_PREFIXES, AUDIO_WELCOME, AUDIO_GOODBYE
 
 # Local imports
@@ -149,6 +149,10 @@ async def join_command(ctx):
 @bot.command(name='leave')
 async def leave_command(ctx):
     await handle_leave(ctx, bot=bot, AUDIO_GOODBYE=AUDIO_GOODBYE)
+
+@bot.command(name='helphumi')
+async def helphumi_command(ctx):
+    await handle_helphumi(ctx)
 
 # =====================
 # === Message Queue Processing ===

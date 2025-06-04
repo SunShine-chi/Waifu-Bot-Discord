@@ -5,6 +5,22 @@ from path_config import AUDIO_WELCOME, AUDIO_GOODBYE
 
 # Lưu ý: Các slash command không thể join/leave voice channel như prefix command do hạn chế context của interaction.
 def setup_slash_commands(bot):
+    class FakeCtx:
+        def __init__(self, interaction):
+            self.guild = interaction.guild
+            self.author = interaction.user
+            self.channel = interaction.channel
+            self.bot = bot
+            self._interaction = interaction
+            self._responded = False
+
+        async def send(self, *args, **kwargs):
+            if not self._responded:
+                self._responded = True
+                await self._interaction.response.send_message(*args, **kwargs)
+            else:
+                await self._interaction.followup.send(*args, **kwargs)
+
     @bot.tree.command(name="hello", description="Say hello")
     async def hello_slash(interaction: discord.Interaction):
         await handle_hello(interaction)
@@ -15,26 +31,11 @@ def setup_slash_commands(bot):
 
     @bot.tree.command(name="join", description="Join the voice channel you are in")
     async def join_slash(interaction: discord.Interaction):
-        # Tạo một context giả giống ctx cho handle_join
-        class FakeCtx:
-            def __init__(self, interaction):
-                self.guild = interaction.guild
-                self.author = interaction.user
-                self.channel = interaction.channel
-                self.send = interaction.response.send_message
-                self.bot = bot
         fake_ctx = FakeCtx(interaction)
         await handle_join(fake_ctx, bot=bot, AUDIO_WELCOME=AUDIO_WELCOME)
 
     @bot.tree.command(name="leave", description="Leave the voice channel if bot is in")
     async def leave_slash(interaction: discord.Interaction):
-        class FakeCtx:
-            def __init__(self, interaction):
-                self.guild = interaction.guild
-                self.author = interaction.user
-                self.channel = interaction.channel
-                self.send = interaction.response.send_message
-                self.bot = bot
         fake_ctx = FakeCtx(interaction)
         await handle_leave(fake_ctx, bot=bot, AUDIO_GOODBYE=AUDIO_GOODBYE)
 

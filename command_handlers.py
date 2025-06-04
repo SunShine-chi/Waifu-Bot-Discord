@@ -18,9 +18,6 @@ async def handle_goodbye(ctx_or_interaction):
         await ctx_or_interaction.response.send_message(msg)
 
 async def handle_join(ctx_or_interaction, bot=None, AUDIO_WELCOME=None):
-    is_slash = hasattr(ctx_or_interaction, '_interaction')
-    if is_slash:
-        await ctx_or_interaction.send()
     if hasattr(ctx_or_interaction, "author"):
         ctx = ctx_or_interaction
         guild_id = ctx.guild.id
@@ -60,15 +57,12 @@ async def handle_join(ctx_or_interaction, bot=None, AUDIO_WELCOME=None):
             await ctx.send("Em đang ở trong vòng tay người khác rồi!")
         except Exception as e:
             await ctx.send(f"Em đã bị lỗi rồi, huhu!: {e}")
-    elif hasattr(ctx_or_interaction, "response") and not is_slash:
+    elif hasattr(ctx_or_interaction, "response"):
         await ctx_or_interaction.response.send_message(
             "Hãy dùng lệnh prefix như !join hoặc /join truyền thống nhé!"
         )
 
 async def handle_leave(ctx_or_interaction, bot=None, AUDIO_GOODBYE=None):
-    is_slash = hasattr(ctx_or_interaction, '_interaction')
-    if is_slash:
-        await ctx_or_interaction.send()
     if hasattr(ctx_or_interaction, "author"):
         ctx = ctx_or_interaction
         guild_id = ctx.guild.id
@@ -86,7 +80,7 @@ async def handle_leave(ctx_or_interaction, bot=None, AUDIO_GOODBYE=None):
             await ctx.send("Giờ mình phải chia xa ư?")
         else:
             await ctx.send("Em đang không ở cùng ai khác đâu")
-    elif hasattr(ctx_or_interaction, "response") and not is_slash:
+    elif hasattr(ctx_or_interaction, "response"):
         await ctx_or_interaction.response.send_message(
             "Hãy dùng lệnh prefix như !leave hoặc /leave truyền thống nhé!"
         ) 

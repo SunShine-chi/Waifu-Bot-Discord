@@ -1,7 +1,7 @@
 import discord
 from discord import app_commands
 from command_handlers import handle_hello, handle_goodbye, handle_join, handle_leave
-from bot import AUDIO_WELCOME, AUDIO_GOODBYE
+from path_config import AUDIO_WELCOME, AUDIO_GOODBYE
 
 # Lưu ý: Các slash command không thể join/leave voice channel như prefix command do hạn chế context của interaction.
 def setup_slash_commands(bot):

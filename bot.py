@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 import emoji
 from slash_commands import setup_slash_commands
 from command_handlers import handle_hello, handle_goodbye, handle_join, handle_leave
+from path_config import COMMAND_PREFIXES, AUDIO_WELCOME, AUDIO_GOODBYE
 
 # Local imports
 from keep_alive import keep_alive
@@ -20,10 +21,6 @@ from keep_alive import keep_alive
 # =====================
 # === Configuration ===
 # =====================
-
-COMMAND_PREFIXES = ['!', '?', '.', '/']
-AUDIO_WELCOME = 'audio/Halo_HuTao.mp3'
-AUDIO_GOODBYE = 'audio/G9_HuTao.mp3'
 
 # =====================
 # === Initialization ===

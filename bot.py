@@ -89,6 +89,21 @@ async def on_ready():
 
 @bot.event
 async def on_message(message):
+    # Debug: In ra các điều kiện kiểm tra
+    guild_id = message.guild.id if message.guild else None
+    print("[DEBUG] guild_id:", guild_id)
+    print("[DEBUG] bot.current_voice_channels:", bot.current_voice_channels)
+    print("[DEBUG] bot.current_text_channels:", bot.current_text_channels)
+    print("[DEBUG] bot.is_ready:", bot.is_ready)
+    print("[DEBUG] message.author.voice:", getattr(message.author, 'voice', None))
+    if guild_id in bot.current_voice_channels:
+        print("[DEBUG] message.author.voice.channel:", getattr(getattr(message.author, 'voice', None), 'channel', None))
+        print("[DEBUG] bot.current_voice_channels[guild_id]:", bot.current_voice_channels.get(guild_id))
+        print("[DEBUG] message.author.voice.channel == bot.current_voice_channels[guild_id]:", getattr(getattr(message.author, 'voice', None), 'channel', None) == bot.current_voice_channels.get(guild_id))
+    if guild_id in bot.current_text_channels:
+        print("[DEBUG] message.channel:", message.channel)
+        print("[DEBUG] bot.current_text_channels[guild_id]:", bot.current_text_channels.get(guild_id))
+        print("[DEBUG] message.channel == bot.current_text_channels[guild_id]:", message.channel == bot.current_text_channels.get(guild_id))
     # Ignore messages from the bot itself
     if message.author == bot.user:
         return
